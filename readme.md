@@ -109,17 +109,6 @@ GEMINI_API_KEY=YOUR_API_KEY
 
 ---
 
-## Screenshots
-
-(Add screenshots after deployment)
-
-- Dashboard
-- AI Reflection
-- Weekly Trend
-- Previous Entries
-
----
-
 ## Future Improvements
 
 - User authentication
