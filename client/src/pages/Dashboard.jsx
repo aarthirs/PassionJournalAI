@@ -7,50 +7,36 @@ import WeeklyTrend from "../components/dashboard/WeeklyTrend";
 import PreviousEntries from "../components/dashboard/PreviousEntries";
 import useJournal from "../hooks/useJournal";
 import Loading from "../components/common/Loading";
-const Dashboard=()=>{
-    const {loading}=useJournal();
-    return (
-       <DashboardLayout>
-    
-        <div
-        className="
-        grid
-        grid-cols-1
-        grid-cols-12
-        gap-6
-        "
-        >
-           <Card className="col-span-8">
-                 <JournalInput/>
-            </Card>
-            <Card className="lg:col-span-4">
-                <ProgressCard/>
-            </Card>
-            <Card className="col-span-8">
-            {
 
-                loading
+const Dashboard = () => {
+  const { loading } = useJournal();
 
-                ?
+  return (
+    <DashboardLayout>
+      {/* Single column on mobile, 12-col grid from large screens up */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <Card className="lg:col-span-8">
+          <JournalInput />
+        </Card>
 
-                <Loading />
+        <Card className="lg:col-span-4">
+          <ProgressCard />
+        </Card>
 
-                :
+        <Card className="lg:col-span-8">
+          {loading ? <Loading /> : <AIReflection />}
+        </Card>
 
-                <AIReflection />
+        <Card className="lg:col-span-4">
+          <WeeklyTrend title="Weekly Trend" duration="Last 7 Days" />
+        </Card>
 
-                }
-            </Card>
-            <Card className="lg:col-span-4">
-                <WeeklyTrend   title="Weekly Trend" duration="Last 7 Days"/>
-            </Card>
-            <Card className="col-span-12">
-                <PreviousEntries />
-            </Card>
-                
-        </div>
-       </DashboardLayout>
-    )
-}
+        <Card className="lg:col-span-12">
+          <PreviousEntries />
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+};
 
 export default Dashboard;

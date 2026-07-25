@@ -1,41 +1,17 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
-:root{
-
-  --bg:#0B1220;
-
-  --card:#182131;
-
-  --border:#2B3445;
-
-  --primary:#FF914D;
-
-  --text:#F9FAFB;
-
-  --secondary:#9CA3AF;
-
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, sans-serif;
 }
 
-body{
-
-    background:var(--bg);
-
-    color:var(--text);
-
-    font-family:Inter,sans-serif;
-
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-::-webkit-scrollbar{
-
-width:8px;
-
-}
-
-::-webkit-scrollbar-thumb{
-
-background:#7c3aed;
-
-border-radius:20px;
-
+::-webkit-scrollbar-thumb {
+  background: #7c3aed;
+  border-radius: 20px;
 }

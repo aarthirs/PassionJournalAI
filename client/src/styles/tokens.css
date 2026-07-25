@@ -1,0 +1,12 @@
+/*
+ * Design tokens. Phase 2 keeps the EXACT current dark values so the UI
+ * looks unchanged. Phase 7 adds a light (warm) theme + [data-theme] switching.
+ */
+:root {
+  --bg: #0B1220;
+  --card: #182131;
+  --border: #2B3445;
+  --primary: #FF914D;
+  --text: #F9FAFB;
+  --secondary: #9CA3AF;
+}

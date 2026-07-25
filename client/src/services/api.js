@@ -1,20 +1,4 @@
-import axios from "axios";
+// Kept for backward compatibility. The axios instance now lives in lib/axios.js.
+import apiClient from "../lib/axios";
 
-const api = axios.create({
-
-    baseURL:
-        import.meta.env.VITE_API_URL ||
-
-        "http://localhost:5000/api",
-
-    timeout:15000,
-
-    headers:{
-
-        "Content-Type":"application/json",
-
-    },
-
-});
-
-export default api;
+export default apiClient;
