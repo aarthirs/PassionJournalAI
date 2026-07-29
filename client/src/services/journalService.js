@@ -1,20 +1,24 @@
-export const createJournalEntry = (
-  journalText,
-  analysis
-) => {
-  return {
-    id: Date.now(),
+import api from "./api";
 
-    createdAt: new Date().toISOString(),
+// Thin, typed wrappers around the journal API. Components/context call these
+// instead of touching axios or localStorage directly.
 
-    journal: journalText,
+export const getJournals = async () => {
+  const { data } = await api.get("/journals");
+  return data;
+};
 
-    analysis: {
-      passion: analysis.passion,
-      mood: analysis.mood,
-      score: analysis.score,
-      reflection: analysis.reflection,
-      goal: analysis.goal,
-    },
-  };
+export const createJournal = async (journalText) => {
+  const { data } = await api.post("/journals", { journalText });
+  return data;
+};
+
+export const deleteJournal = async (id) => {
+  const { data } = await api.delete(`/journals/${id}`);
+  return data;
+};
+
+export const importJournals = async (entries) => {
+  const { data } = await api.post("/journals/import", { entries });
+  return data;
 };
