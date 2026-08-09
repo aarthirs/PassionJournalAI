@@ -27,3 +27,68 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Print styles — powers "Save as PDF" on the analytics page via the browser's
+ * own print-to-PDF. Chosen over a server-side PDF library (puppeteer/pdfkit)
+ * because those add a heavy dependency and a headless browser just to reproduce
+ * a layout the browser can already render perfectly.
+ */
+@media print {
+  /* Force the light palette: dark backgrounds waste ink and print poorly. */
+  :root, [data-theme="dark"], [data-theme="light"] {
+    --bg: #FFFFFF;
+    --surface-panel: #FFFFFF;
+    --surface-card: #FFFFFF;
+    --surface-subtle: #F5F5F5;
+    --border: #DDDDDD;
+    --border-strong: #BBBBBB;
+    --text: #111111;
+    --text-muted: #444444;
+    --text-faint: #777777;
+    --track: #E5E5E5;
+    --shadow: none;
+  }
+
+  body { background: #fff !important; color: #111 !important; }
+
+  /* Chrome/Firefox drop background colours by default; our charts need them. */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Don't split a card across two pages. */
+  section { break-inside: avoid; page-break-inside: avoid; }
+
+  .print\:hidden { display: none !important; }
+  .print\:static { position: static !important; }
+  .print\:border-none { border: none !important; }
+
+  @page { margin: 14mm; }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Never allow a stray wide element to create horizontal scrolling on mobile. */
+html, body { overflow-x: hidden; max-width: 100%; }
+
+/* Comfortable tap targets on touch devices (WCAG ~44px). */
+@media (pointer: coarse) {
+  button, a[role="button"], [role="switch"] { min-height: 40px; }
+}
+
+/*
+ * Cheap virtualization: the browser skips layout/paint for off-screen rows.
+ * contain-intrinsic-size supplies an estimated height so the scrollbar stays
+ * accurate. This buys most of the benefit of a windowing library on lists of a
+ * few hundred rows without adding a dependency.
+ */
+.list-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 44px;
+}
+.msg-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+}

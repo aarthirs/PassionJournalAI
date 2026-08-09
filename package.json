@@ -2,7 +2,7 @@
   "name": "reflect-ai",
   "private": true,
   "version": "1.0.0",
-  "description": "Reflect AI — AI mental wellness & personal growth companion (monorepo)",
+  "description": "Reflect AI \u2014 AI mental wellness & personal growth companion (monorepo)",
   "type": "module",
   "workspaces": [
     "client",
@@ -14,7 +14,9 @@
     "dev:server": "npm --workspace server run dev",
     "build": "npm --workspace client run build",
     "start": "npm --workspace server run start",
-    "lint": "npm --workspace client run lint"
+    "lint": "npm run lint --workspace client",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

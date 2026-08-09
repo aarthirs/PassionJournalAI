@@ -49,6 +49,43 @@ journalEntrySchema.pre("save", function (next) {
   next();
 });
 
+/*
+ * Serializer written against a PLAIN object, not a document.
+ *
+ * That lets read-only queries use .lean() — which skips hydrating full Mongoose
+ * documents (getters, change tracking, methods) and is measurably cheaper when
+ * loading a few hundred entries for analytics. The document method below simply
+ * delegates, so both call sites share one definition of the client shape.
+ */
+export const serializeEntry = (doc) => {
+  if (!doc) return null;
+  const a = doc.analysis || {};
+  return {
+    id: String(doc._id),
+    title: doc.title || deriveTitle(doc.content),
+    journal: doc.content,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+    lastMessageAt: doc.lastMessageAt,
+    pinned: !!doc.pinned,
+    favorite: !!doc.favorite,
+    archived: !!doc.archived,
+    analysis: {
+      passion: a.passion ?? "",
+      mood: a.mood ?? "",
+      score: a.score ?? 0,
+      reflection: a.reflection ?? "",
+      goal: a.goal ?? "",
+      emotion: a.emotion ?? "",
+      depth: a.depth ?? "",
+      depthScore: a.depthScore ?? 0,
+      stress: a.stress ?? 0,
+      energy: a.energy ?? 0,
+      quote: a.quote ?? "",
+    },
+  };
+};
+
 journalEntrySchema.methods.toClient = function () {
   const a = this.analysis || {};
   return {

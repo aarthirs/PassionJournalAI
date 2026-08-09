@@ -10,7 +10,8 @@ import logger from "../config/logger.js";
 const notFound = () => Object.assign(new Error("Conversation not found."), { status: 404 });
 
 const invalidate = (userId) =>
-  cacheDel(keys.journalList(userId), keys.journalFirstPage(userId, 20), keys.pinned(userId), keys.patterns(userId));
+  cacheDel(keys.journalList(userId), keys.journalFirstPage(userId, 20), keys.pinned(userId), keys.patterns(userId),
+    keys.analytics(userId, "6m"), keys.analytics(userId, "1y"), keys.analytics(userId, "all"));
 
 // Pre-Phase-7 entries have no message rows; synthesize them on first open.
 const backfillIfEmpty = async (thread) => {
@@ -77,15 +78,19 @@ export const sendMessage = async (userId, journalId, text, { userName = "" } = {
   thread.lastMessageAt = new Date();
   await thread.save();
 
-  // FAST memory update — cheap arithmetic, every turn.
-  await recordTurn(userId, { analysis, userText: text });
+  // FAST memory update — cheap arithmetic, every turn (unless disabled).
+  if (context.preferences?.memoryEnabled !== false) {
+    await recordTurn(userId, { analysis, userText: text });
+  }
 
   await invalidate(userId);
 
   // SLOW memory update — only when due. Deliberately NOT awaited so the user
   // isn't kept waiting on a second model call; failures are logged, not fatal.
-  const memory = await getMemory(userId);
-  if (needsSummaryRefresh(memory)) {
+  // Only maintain memory if the user has it enabled.
+  const memoryEnabled = context.preferences?.memoryEnabled !== false;
+  const memory = memoryEnabled ? await getMemory(userId) : null;
+  if (memoryEnabled && needsSummaryRefresh(memory)) {
     refreshSummary(userId, {
       recentEntries: context.history.slice(0, 12),
       patterns: context.patterns,

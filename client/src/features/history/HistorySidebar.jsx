@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { Brain, Plus, Pin, LogOut, BarChart3, Settings, Filter } from "lucide-react";
 
 import useHistory from "./useHistory";
@@ -116,8 +117,18 @@ const HistorySidebar = ({ activeId, onSelect, onNew }) => {
 
       {/* Footer: nav + profile */}
       <div className="border-t border-[var(--border)] px-3 py-3">
-        <FooterLink icon={<BarChart3 size={16} />} label="Trend Analysis" disabled title="Coming in Phase 9" />
-        <FooterLink icon={<Settings size={16} />} label="Settings" disabled title="Coming in Phase 10" />
+        <Link
+          to="/analytics"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--text)] transition hover:bg-[var(--surface-subtle)]"
+        >
+          <BarChart3 size={16} /> Trend Analysis
+        </Link>
+        <Link
+          to="/settings"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--text)] transition hover:bg-[var(--surface-subtle)]"
+        >
+          <Settings size={16} /> Settings
+        </Link>
 
         <div className="mt-2 flex items-center gap-2 rounded-lg px-2 py-2">
           {user?.avatar ? (
@@ -157,15 +168,6 @@ const FilterChip = ({ active, onClick, label }) => (
   </button>
 );
 
-const FooterLink = ({ icon, label, disabled, title }) => (
-  <button
-    disabled={disabled}
-    title={title}
-    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--text)] transition hover:bg-[var(--surface-subtle)] disabled:cursor-not-allowed disabled:opacity-40"
-  >
-    {icon} {label}
-  </button>
-);
 
 const SkeletonList = () => (
   <div className="space-y-2 px-2 py-2">

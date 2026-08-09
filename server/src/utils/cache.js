@@ -5,7 +5,8 @@ export const TTL = {
   JOURNAL_LIST: 300,   // 5 min — also invalidated on every write
   JOURNAL_FIRST_PAGE: 120,
   PINNED: 300,
-  PATTERNS: 180,   // 3 min — recomputed from history, cheap to refresh
+  PATTERNS: 180,
+  ANALYTICS: 300,   // 5 min — whole-history computation, read far more than written   // 3 min — recomputed from history, cheap to refresh
 };
 
 export const keys = {
@@ -14,6 +15,7 @@ export const keys = {
   journalFirstPage: (userId, limit) => `journals:${userId}:page1:${limit}`,
   pinned: (userId) => `journals:${userId}:pinned`,
   patterns: (userId) => `insights:${userId}:patterns`,
+  analytics: (userId, range) => `analytics:${userId}:${range}`,
 };
 
 // Every helper is failure-tolerant: if Redis is disabled or erroring, reads

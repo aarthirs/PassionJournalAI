@@ -1,4 +1,4 @@
-import JournalEntry from "../models/JournalEntry.js";
+import JournalEntry, { serializeEntry } from "../models/JournalEntry.js";
 import { decodeCursor, cursorFilter, encodeCursor } from "../utils/cursor.js";
 
 // Escape user input before using it in a regex, otherwise characters like
@@ -68,9 +68,12 @@ export const listPage = async (
 
   // Fetch one extra document to know whether another page exists without
   // running a second count query.
+  // .lean() -> plain objects, no document hydration. This is the hottest read
+  // in the app (history list + analytics), so it is worth the explicit call.
   const docs = await JournalEntry.find(query)
     .sort({ createdAt: -1, _id: -1 })
-    .limit(limit + 1);
+    .limit(limit + 1)
+    .lean();
 
   const hasMore = docs.length > limit;
   const items = hasMore ? docs.slice(0, limit) : docs;
@@ -82,10 +85,13 @@ export const listPage = async (
 };
 
 // Pinned list is intentionally unpaginated — it's meant to stay small.
-export const listPinned = (userId) =>
-  JournalEntry.find({ userId, pinned: true, archived: { $ne: true } })
+export const listPinned = async (userId) => {
+  const docs = await JournalEntry.find({ userId, pinned: true, archived: { $ne: true } })
     .sort({ updatedAt: -1 })
-    .limit(50);
+    .limit(50)
+    .lean();
+  return docs.map(serializeEntry);
+};
 
 export const bulkInsertForUser = (userId, entries) =>
   JournalEntry.insertMany(

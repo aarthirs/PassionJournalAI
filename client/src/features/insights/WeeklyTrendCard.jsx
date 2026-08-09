@@ -30,12 +30,12 @@ const WeeklyTrendCard = ({ series, stats }) => {
         <>
           <Legend />
 
-          <div className="h-28 w-full">
+          <div className="h-32 w-full sm:h-28">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={series} margin={{ top: 5, right: 4, left: 4, bottom: 0 }}>
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 10, fill: "var(--text-faint)" }}
+                  tick={{ fontSize: 13, fill: "var(--text-faint)" }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -44,7 +44,7 @@ const WeeklyTrendCard = ({ series, stats }) => {
                     background: "var(--surface-card)",
                     border: "1px solid var(--border)",
                     borderRadius: 12,
-                    fontSize: 12,
+                    fontSize: 15,
                     color: "var(--text)",
                   }}
                 />

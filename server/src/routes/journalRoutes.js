@@ -10,6 +10,7 @@ import {
   importJournals,
 } from "../controllers/journalController.js";
 import { getMessages, postMessage } from "../controllers/chatController.js";
+import { aiLimiter } from "../middleware/rateLimit.js";
 
 const router = express.Router();
 
@@ -25,7 +26,8 @@ router.post("/", createJournal); // legacy one-shot analyze+save
 
 // Conversation turns. ":id" = "new" starts a fresh thread.
 router.get("/:id/messages", getMessages);
-router.post("/:id/messages", postMessage);
+// Each send triggers a paid model call, so it gets the AI-specific limit.
+router.post("/:id/messages", aiLimiter, postMessage);
 
 router.patch("/:id", updateJournal);
 router.delete("/:id", deleteJournal);

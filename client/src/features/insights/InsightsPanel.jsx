@@ -14,7 +14,7 @@ const InsightsPanel = ({ analysis, onClose }) => {
   const shown = analysis || latest?.analysis || null;
 
   return (
-    <div className="flex h-full flex-col border-l border-[var(--border)] bg-[var(--surface-panel)]">
+    <div className="flex h-full max-h-full flex-col border-[var(--border)] bg-[var(--surface-panel)] xl:border-l">
       <header className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-3.5">
         <h2 className="text-base font-semibold">Today's Insights</h2>
         <div className="flex items-center gap-2">

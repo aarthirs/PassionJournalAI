@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { memo, useState, useRef, useEffect } from "react";
 import {
   MoreHorizontal, Pin, PinOff, Star, Archive,
   ArchiveRestore, Pencil, Trash2, Check, X,
@@ -61,7 +61,7 @@ const HistoryItem = ({ entry, active, onSelect, onRename, onTogglePin, onToggleF
 
   return (
     <div
-      className={`group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition cursor-pointer ${
+      className={`list-row group relative flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition ${
         active ? "bg-[var(--surface-subtle)] text-[var(--text)]" : "text-[var(--text)] hover:bg-[var(--surface-subtle)]"
       }`}
       onClick={() => onSelect?.(entry)}
@@ -128,4 +128,4 @@ const MenuItem = ({ icon, label, onClick, danger }) => (
   </button>
 );
 
-export default HistoryItem;
+export default memo(HistoryItem);

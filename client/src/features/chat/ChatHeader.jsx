@@ -1,4 +1,5 @@
-import { Menu, Sun, Moon, BarChart3 } from "lucide-react";
+import { Sun, Moon, BarChart3 } from "lucide-react";
+import { NavButton } from "../../layout/AppShell";
 import useTheme from "../../hooks/useTheme";
 
 const greeting = () => {
@@ -13,13 +14,7 @@ const ChatHeader = ({ userName, mood, onOpenSidebar, onOpenInsights }) => {
 
   return (
     <header className="flex items-center gap-3 border-b border-[var(--border)] px-4 py-3.5 lg:px-8">
-      <button
-        onClick={onOpenSidebar}
-        className="grid h-9 w-9 place-items-center rounded-lg text-[var(--text-muted)] transition hover:bg-[var(--surface-subtle)] lg:hidden"
-        aria-label="Open history"
-      >
-        <Menu size={20} />
-      </button>
+      <NavButton onClick={onOpenSidebar} />
 
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-lg font-semibold leading-tight">
@@ -38,7 +33,7 @@ const ChatHeader = ({ userName, mood, onOpenSidebar, onOpenInsights }) => {
       <button
         onClick={toggle}
         title={`Switch to ${resolved === "dark" ? "light" : "dark"} mode`}
-        className="grid h-9 w-9 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-subtle)]"
+        className="grid h-10 w-10 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-subtle)]"
       >
         {resolved === "dark" ? <Sun size={17} /> : <Moon size={17} />}
       </button>
@@ -46,7 +41,7 @@ const ChatHeader = ({ userName, mood, onOpenSidebar, onOpenInsights }) => {
       <button
         onClick={onOpenInsights}
         title="Insights"
-        className="grid h-9 w-9 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-subtle)] xl:hidden"
+        className="grid h-10 w-10 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-subtle)] xl:hidden"
       >
         <BarChart3 size={17} />
       </button>

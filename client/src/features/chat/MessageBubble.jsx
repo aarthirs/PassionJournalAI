@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Feather } from "lucide-react";
 import Markdown from "../../utils/markdown.jsx";
 import useAuth from "../../hooks/useAuth";
@@ -29,10 +30,10 @@ const MessageBubble = ({ message, displayText }) => {
   );
 
   return (
-    <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+    <div className={`msg-row flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       {Avatar}
 
-      <div className={`flex min-w-0 max-w-[78%] flex-col ${isUser ? "items-end" : "items-start"}`}>
+      <div className={`flex min-w-0 max-w-[95%] flex-col sm:max-w-[78%] lg:max-w-[90ch] ${isUser ? "items-end" : "items-start"}`}>
         <div
           className={`rounded-2xl px-4 py-3 text-[0.95rem] ${
             isUser
@@ -55,4 +56,4 @@ const MessageBubble = ({ message, displayText }) => {
   );
 };
 
-export default MessageBubble;
+export default memo(MessageBubble);

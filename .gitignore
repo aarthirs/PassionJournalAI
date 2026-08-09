@@ -1,21 +1,20 @@
-# Dependencies
 node_modules/
-
-# Environment files
-.env
-client/.env
-server/.env
-
-# Build output
 dist/
-.vite/
+build/
 
-# Logs
+# Secrets — never commit these
+.env
+.env.local
+.env.*.local
+server/.env
+client/.env
+
+# Logs / OS noise
 *.log
-
-# OS files
+npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# VS Code
+# Editor
 .vscode/
+.idea/

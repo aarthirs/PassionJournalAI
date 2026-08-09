@@ -1,5 +1,6 @@
 import { analyzeWithGemini } from "./geminiService.js";
 import * as journalRepo from "../repository/journalRepo.js";
+import { serializeEntry } from "../models/JournalEntry.js";
 import * as messageRepo from "../repository/messageRepo.js";
 import { cacheAside, cacheDel, keys, TTL } from "../utils/cache.js";
 
@@ -9,7 +10,10 @@ const invalidateUser = (userId, limit = 20) =>
     keys.journalList(userId),
     keys.journalFirstPage(userId, limit),
     keys.pinned(userId),
-    keys.patterns(userId)
+    keys.patterns(userId),
+    keys.analytics(userId, "6m"),
+    keys.analytics(userId, "1y"),
+    keys.analytics(userId, "all")
   );
 
 export const createAnalyzedEntry = async (userId, content) => {
@@ -34,7 +38,8 @@ export const getHistoryPage = async (userId, { cursor, limit = 20, q, filter } =
 
   const load = async () => {
     const { items, nextCursor } = await journalRepo.listPage(userId, { cursor, limit, q, filter });
-    return { items: items.map((e) => e.toClient()), nextCursor };
+    // items are lean objects -> use the shared serializer, not a document method.
+    return { items: items.map(serializeEntry), nextCursor };
   };
 
   if (!isDefaultFirstPage) return load();
@@ -43,10 +48,8 @@ export const getHistoryPage = async (userId, { cursor, limit = 20, q, filter } =
 };
 
 export const getPinned = async (userId) =>
-  cacheAside(keys.pinned(userId), TTL.PINNED, async () => {
-    const items = await journalRepo.listPinned(userId);
-    return items.map((e) => e.toClient());
-  });
+  // listPinned already returns serialized objects.
+  cacheAside(keys.pinned(userId), TTL.PINNED, () => journalRepo.listPinned(userId));
 
 export const updateEntry = async (userId, id, fields) => {
   const updated = await journalRepo.updateForUser(userId, id, fields);
@@ -70,7 +73,7 @@ export const removeEntry = async (userId, id) => {
 export const getEntries = async (userId) =>
   cacheAside(keys.journalList(userId), TTL.JOURNAL_LIST, async () => {
     const { items } = await journalRepo.listPage(userId, { limit: 200, includePinned: true });
-    return items.map((e) => e.toClient());
+    return items.map(serializeEntry);
   });
 
 export const importEntries = async (userId, rawEntries) => {

@@ -83,6 +83,43 @@ const describeRelated = (entries) => {
     .join("\n");
 };
 
+/*
+ * Turns the user's saved AI preferences into concrete prompt instructions.
+ * This is what makes the Settings page real rather than decorative — each
+ * toggle changes the text the model actually receives.
+ */
+const TONES = {
+  warm: "Be warm and encouraging, like a close friend who believes in them.",
+  direct: "Be straightforward and practical. Skip flourish; get to what matters.",
+  gentle: "Be especially gentle and soft. Move slowly and never push.",
+};
+
+const LENGTHS = {
+  short: "Keep your reply to 1-2 short paragraphs. Be concise.",
+  medium: "Keep your reply to 2-3 short paragraphs.",
+  long: "You may write 3-4 paragraphs, exploring the thought more fully.",
+};
+
+export const describePreferences = (prefs) => {
+  if (!prefs) return "";
+  const lines = [];
+
+  if (TONES[prefs.tone]) lines.push(`- ${TONES[prefs.tone]}`);
+  if (LENGTHS[prefs.replyLength]) lines.push(`- ${LENGTHS[prefs.replyLength]}`);
+
+  lines.push(
+    prefs.followUpQuestions === false
+      ? "- Do NOT end with a question. Simply reflect and let them sit with it."
+      : "- End with ONE thoughtful follow-up question."
+  );
+
+  if (prefs.referencePastEntries === false) {
+    lines.push("- Do NOT reference their previous entries. Respond only to what they wrote now.");
+  }
+
+  return lines.join("\n");
+};
+
 const ANALYSIS_SCHEMA = `{
   "reply": "your warm conversational response",
   "passion": "one category (Programming, Reading, Fitness, Career, Learning, Personal Growth, Other)",
@@ -101,17 +138,21 @@ const ANALYSIS_SCHEMA = `{
  * @param patterns   buildPatternReport output (or null)
  * @param related    relevant past entries (or [])
  */
-export const buildChatPrompt = ({ transcript = [], memory = null, patterns = null, related = [], userName = "" } = {}) => {
+export const buildChatPrompt = ({ transcript = [], memory = null, patterns = null, related = [], userName = "", preferences = null } = {}) => {
   const convo = transcript
     .map((m) => `${m.role === "user" ? "Person" : "You"}: ${m.content}`)
     .join("\n\n");
 
+  // Preferences can switch whole context layers off.
+  const usePast = preferences?.referencePastEntries !== false;
+
   const blocks = [
     SYSTEM_FRAMING,
+    section("How this person prefers you to respond", describePreferences(preferences)),
     userName ? `The person's name is ${userName.split(" ")[0]}.` : "",
-    section("What you remember about this person", describeMemory(memory)),
+    section("What you remember about this person", usePast ? describeMemory(memory) : ""),
     section("Observed patterns (from their tracked data)", describePatterns(patterns)),
-    section("Related things they wrote before", describeRelated(related)),
+    section("Related things they wrote before", usePast ? describeRelated(related) : ""),
     section(
       "Using this context",
       [

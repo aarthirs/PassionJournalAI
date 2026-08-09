@@ -1,0 +1,12 @@
+* [33m6c48e05[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;32mbackup-before-recovery[m[33m)[m added Oauth , modified ui as standard chatbot and  AI long-term memory, pattern detection, contextual retrieval, and period summaries
+[31m|[m * [33me979f95[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m updated mongoatlas info's
+[31m|[m[31m/[m  
+* [33m60548e8[m feat: MongoDB persistence with Mongoose models, repository layer, and localStorage migration and optional Redis caching layer with cache-aside reads and write invalidatio
+*   [33mf7a8f10[m Merge branch 'main' of https://github.com/aarthirs/PassionJournalAI
+[33m|[m[34m\[m  
+[33m|[m * [33md812de6[m Update readme.md
+[33m|[m * [33md478223[m Update readme.md
+[33m|[m * [33mcbeb067[m Update readme.md
+* [34m|[m [33m6860ee5[m refactor: monorepo layout, clean architecture scaffolding, fix toast crash & dead code
+[34m|[m[34m/[m  
+* [33m5e69e34[m Initial release - Passion Journal AI

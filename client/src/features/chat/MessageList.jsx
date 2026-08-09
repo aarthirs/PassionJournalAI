@@ -49,7 +49,7 @@ const MessageList = ({ messages, sending, loading, supportNotice, userName }) =>
 
   if (loading) {
     return (
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1140px] flex-1 space-y-4 overflow-y-auto px-3 py-6 sm:px-4 lg:px-3">
         {[0, 1, 2].map((i) => (
           <div key={i} className={`flex gap-3 ${i % 2 ? "flex-row-reverse" : ""}`}>
             <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-[var(--surface-subtle)]" />
@@ -77,8 +77,9 @@ const MessageList = ({ messages, sending, loading, supportNotice, userName }) =>
     <div
       ref={scrollerRef}
       onScroll={handleScroll}
-      className="flex-1 space-y-5 overflow-y-auto px-4 py-6 lg:px-8"
+      className="flex-1 overflow-y-auto px-3 py-6 sm:px-4 lg:px-3"
     >
+     <div className="mx-auto w-full max-w-[1140px] space-y-5">
       {messages.map((m, idx) => {
         const isNewestAi = idx === lastIndex && m.role === "ai" && !String(m.id).startsWith("temp-");
         return isNewestAi ? (
@@ -105,6 +106,7 @@ const MessageList = ({ messages, sending, loading, supportNotice, userName }) =>
       )}
 
       <div ref={bottomRef} />
+     </div>
     </div>
   );
 };
