@@ -1,100 +1,113 @@
 import { GoogleGenAI } from "@google/genai";
-import { validateAnalysis } from "../validators/analysisValidator.js";
-import { analyzeByRules } from "./ruleEngine.js";
+import env from "../config/env.js";
+import logger from "../config/logger.js";
+import { analyzeByRules, replyByRules } from "./ruleEngine.js";
+import { SYSTEM_FRAMING } from "../utils/safety.js";
+import {
+  buildChatPrompt,
+  buildMemorySummaryPrompt,
+  buildPeriodSummaryPrompt,
+} from "./ai/promptBuilder.js";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+const ai = new GoogleGenAI({ apiKey: env.geminiApiKey });
+const MODEL = "gemini-2.5-flash";
 
-export const analyzeWithGemini = async (journalText) => {
-  const prompt = `
-You are an AI Passion Journal assistant.
+const parseJson = (raw) =>
+  JSON.parse(String(raw).replace(/```json/gi, "").replace(/```/g, "").trim());
 
-Analyze the user's journal entry and return ONLY valid JSON.
+const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Number(n) || 0));
 
-Rules:
+const normalizeAnalysis = (a = {}) => {
+  let score = Number(a.score) || 0;
+  if (score > 0 && score <= 10) score *= 10;
+  const depths = ["Light", "Medium", "Deep"];
+  return {
+    passion: String(a.passion || "Personal Growth").trim(),
+    mood: String(a.mood || "Neutral").trim(),
+    emotion: String(a.emotion || "Reflective").trim(),
+    depth: depths.includes(a.depth) ? a.depth : "Medium",
+    depthScore: clamp(a.depthScore ?? 50),
+    stress: clamp(a.stress ?? 40),
+    energy: clamp(a.energy ?? 50),
+    score: clamp(score),
+    reflection: String(a.reflection || "").trim(),
+    goal: String(a.goal || "").trim(),
+    quote: String(a.quote || "").trim(),
+  };
+};
 
-1. Return ONLY JSON.
-2. No markdown.
-3. Score must be an integer between 0 and 100.
-4. Reflection should be 2-3 sentences.
-5. Goal should be one actionable sentence.
-6. Passion should be one category only.
-7. Mood should be one word.
+const generate = async (prompt) => {
+  const response = await ai.models.generateContent({ model: MODEL, contents: prompt });
+  return response.text;
+};
 
-Passion Categories:
-Programming
-Reading
-Fitness
-Football
-Music
-Art
-Career
-Learning
-Personal Growth
-Other
-
-JSON Schema:
-
-{
-  "passion":"",
-  "mood":"",
-  "score":0,
-  "reflection":"",
-  "goal":""
-}
-
-Journal:
-
-${journalText}
-`;
+/**
+ * Memory-aware conversational reply.
+ * `context` = { transcript, memory, patterns, related, userName }
+ */
+export const generateChatReply = async (context) => {
+  const transcript = context?.transcript || [];
+  const latestUser = [...transcript].reverse().find((m) => m.role === "user")?.content || "";
 
   try {
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
-
-    const cleaned = response.text
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    const result = JSON.parse(cleaned);
-
-    // Normalize score
-    result.score = Number(result.score);
-
-    if (result.score <= 10) {
-      result.score *= 10;
-    }
-
-    result.score = Math.min(
-      100,
-      Math.max(0, result.score)
-    );
-
-    // Clean strings
-    result.passion = result.passion.trim();
-    result.mood = result.mood.trim();
-    result.reflection = result.reflection.trim();
-    result.goal = result.goal.trim();
-
-    // Validate response
-    if (!validateAnalysis(result)) {
-      throw new Error("Invalid AI response");
-    }
-
-    return result;
-
+    const parsed = parseJson(await generate(buildChatPrompt(context)));
+    const reply = String(parsed.reply || "").trim();
+    if (!reply) throw new Error("Model returned no reply");
+    return { reply, analysis: normalizeAnalysis(parsed), source: "ai" };
   } catch (error) {
+    logger.warn(`Gemini chat failed (${error.message}). Falling back to rule engine.`);
+    const { reply, analysis } = replyByRules(latestUser);
+    return { reply, analysis, source: "rule" };
+  }
+};
 
-    console.warn(
-      "Gemini failed. Falling back to Rule Engine."
-    );
+// Rewrites the long-term memory narrative. Returns plain text.
+export const generateMemorySummary = async ({ previousSummary, recentEntries, patterns }) => {
+  const text = await generate(buildMemorySummaryPrompt({ previousSummary, recentEntries, patterns }));
+  return String(text || "").replace(/```/g, "").trim();
+};
 
+// Weekly / monthly / yearly reflection. Returns { content, highlights }.
+export const generatePeriodSummary = async ({ period, stats, patterns, entries }) => {
+  try {
+    const parsed = parseJson(await generate(buildPeriodSummaryPrompt({ period, stats, patterns, entries })));
+    return {
+      content: String(parsed.content || "").trim(),
+      highlights: Array.isArray(parsed.highlights) ? parsed.highlights.map(String).slice(0, 5) : [],
+      source: "ai",
+    };
+  } catch (error) {
+    logger.warn(`Period summary failed (${error.message}). Using deterministic fallback.`);
+    return {
+      content:
+        `You wrote ${stats.entries} ${stats.entries === 1 ? "entry" : "entries"} across ` +
+        `${stats.activeDays} ${stats.activeDays === 1 ? "day" : "days"} this ${period.replace("ly", "")}. ` +
+        `Your average mood was ${stats.avgMood}/100. Showing up to reflect at all is the habit that compounds.`,
+      highlights: [
+        `${stats.entries} entries, ${stats.activeDays} active days`,
+        stats.topTheme ? `Most frequent focus: ${stats.topTheme}` : "",
+        stats.topEmotion ? `Most frequent emotion: ${stats.topEmotion}` : "",
+      ].filter(Boolean),
+      source: "rule",
+    };
+  }
+};
+
+// Legacy one-shot analyze (still backing /ai/analyze).
+export const analyzeWithGemini = async (journalText) => {
+  const prompt = `${SYSTEM_FRAMING}
+
+Analyze this journal entry. Return ONLY valid JSON (no markdown) with keys:
+passion, mood, emotion, depth (Light|Medium|Deep), depthScore, stress, energy, score, reflection, goal, quote.
+Numeric fields are 0-100.
+
+Journal:
+${journalText}`;
+
+  try {
+    return normalizeAnalysis(parseJson(await generate(prompt)));
+  } catch (error) {
+    logger.warn(`Gemini analyze failed (${error.message}). Falling back to rule engine.`);
     return analyzeByRules(journalText);
-
   }
 };

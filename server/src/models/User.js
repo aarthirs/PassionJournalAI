@@ -9,9 +9,10 @@ const userSchema = new Schema(
       type: String,
       lowercase: true,
       trim: true,
-      // sparse: unique only among docs that HAVE an email (anonymous users may not).
       index: { unique: true, sparse: true },
     },
+    // Google's stable account id. sparse -> uniqueness only enforced when set.
+    googleId: { type: String, index: { unique: true, sparse: true } },
     avatar: { type: String, default: "" },
     provider: { type: String, enum: ["local", "google"], default: "local" },
     growthScore: { type: Number, default: 0 },

@@ -1,20 +1,29 @@
-import Dashboard from "./pages/Dashboard";
-import Toast from "./components/common/Toast";
-import useJournal from "./hooks/useJournal";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// NOTE: Router (Welcome / Login / protected routes) is introduced in Phase 5.
+import Welcome from "./pages/Welcome";
+import Login from "./pages/Login";
+import Chat from "./pages/Chat";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
-  const { toast, setToast } = useJournal();
-
   return (
-    <>
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ message: "", type: "" })}
-      />
-      <Dashboard />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Welcome />} />
+        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -1,15 +1,33 @@
 import api from "./api";
 
-// Thin, typed wrappers around the journal API. Components/context call these
-// instead of touching axios or localStorage directly.
+// Paginated history. Returns { items, nextCursor }.
+export const fetchHistoryPage = async ({ cursor, limit = 20, q = "", filter } = {}) => {
+  const params = { limit };
+  if (cursor) params.cursor = cursor;
+  if (q) params.q = q;
+  if (filter) params.filter = filter;
+  const { data } = await api.get("/journals", { params });
+  return data;
+};
 
-export const getJournals = async () => {
-  const { data } = await api.get("/journals");
+export const fetchPinned = async () => {
+  const { data } = await api.get("/journals/pinned");
+  return data;
+};
+
+// Full recent set — used by the dashboard widgets (streak, weekly trend).
+export const fetchAllJournals = async () => {
+  const { data } = await api.get("/journals/all");
   return data;
 };
 
 export const createJournal = async (journalText) => {
   const { data } = await api.post("/journals", { journalText });
+  return data;
+};
+
+export const updateJournal = async (id, fields) => {
+  const { data } = await api.patch(`/journals/${id}`, fields);
   return data;
 };
 

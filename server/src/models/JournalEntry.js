@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
+import { deriveTitle } from "../utils/title.js";
 
 const { Schema, model } = mongoose;
 
-// Embedded analysis. Kept denormalized inside the entry for now; when the
-// analytics phase needs cross-entry emotion queries we can promote this to a
-// standalone MoodAnalysis collection (roadmap Phase 9).
+// Extended in Phase 7 to power the insights panel. Every new field has a
+// default, so entries created before Phase 7 remain valid with no migration.
 const analysisSchema = new Schema(
   {
     passion: { type: String, default: "" },
@@ -12,6 +12,13 @@ const analysisSchema = new Schema(
     score: { type: Number, default: 0, min: 0, max: 100 },
     reflection: { type: String, default: "" },
     goal: { type: String, default: "" },
+
+    emotion: { type: String, default: "" },                 // e.g. "Contemplative"
+    depth: { type: String, enum: ["", "Light", "Medium", "Deep"], default: "" },
+    depthScore: { type: Number, default: 0, min: 0, max: 100 },
+    stress: { type: Number, default: 0, min: 0, max: 100 },
+    energy: { type: Number, default: 0, min: 0, max: 100 },
+    quote: { type: String, default: "" },                   // short encouraging line
   },
   { _id: false }
 );
@@ -20,29 +27,52 @@ const journalEntrySchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     content: { type: String, required: true, trim: true },
+    title: { type: String, default: "", trim: true, maxlength: 120 },
     analysis: { type: analysisSchema, default: () => ({}) },
     source: { type: String, enum: ["ai", "rule"], default: "ai" },
+
+    pinned: { type: Boolean, default: false },
+    favorite: { type: Boolean, default: false },
+    archived: { type: Boolean, default: false },
+
+    // Bumped on every new turn so threads can be ordered by recent activity.
+    lastMessageAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
-// Compound index powering the two hot reads: history list and weekly trend
-// ("most recent entries for this user").
-journalEntrySchema.index({ userId: 1, createdAt: -1 });
+journalEntrySchema.index({ userId: 1, createdAt: -1, _id: -1 });
+journalEntrySchema.index({ userId: 1, pinned: -1, updatedAt: -1 });
 
-// Serialize to the EXACT shape the existing React components already consume,
-// so swapping localStorage -> MongoDB requires no component changes.
+journalEntrySchema.pre("save", function (next) {
+  if (!this.title) this.title = deriveTitle(this.content);
+  next();
+});
+
 journalEntrySchema.methods.toClient = function () {
+  const a = this.analysis || {};
   return {
     id: this._id.toString(),
+    title: this.title || deriveTitle(this.content),
     journal: this.content,
     createdAt: this.createdAt,
+    updatedAt: this.updatedAt,
+    lastMessageAt: this.lastMessageAt,
+    pinned: !!this.pinned,
+    favorite: !!this.favorite,
+    archived: !!this.archived,
     analysis: {
-      passion: this.analysis?.passion ?? "",
-      mood: this.analysis?.mood ?? "",
-      score: this.analysis?.score ?? 0,
-      reflection: this.analysis?.reflection ?? "",
-      goal: this.analysis?.goal ?? "",
+      passion: a.passion ?? "",
+      mood: a.mood ?? "",
+      score: a.score ?? 0,
+      reflection: a.reflection ?? "",
+      goal: a.goal ?? "",
+      emotion: a.emotion ?? "",
+      depth: a.depth ?? "",
+      depthScore: a.depthScore ?? 0,
+      stress: a.stress ?? 0,
+      energy: a.energy ?? 0,
+      quote: a.quote ?? "",
     },
   };
 };

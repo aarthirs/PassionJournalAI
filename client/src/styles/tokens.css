@@ -1,12 +1,84 @@
 /*
- * Design tokens. Phase 2 keeps the EXACT current dark values so the UI
- * looks unchanged. Phase 7 adds a light (warm) theme + [data-theme] switching.
+ * Design tokens.
+ *
+ * Every colour in the app is referenced through a SEMANTIC variable
+ * (--surface-panel, --bubble-user) rather than a raw hex. That means adding or
+ * retuning a theme happens here, in one file, instead of hunting through
+ * components — which is exactly why Phase 2 extracted these up front.
+ *
+ * Light  = warm / terracotta  (banani "MainJournalApp.png")
+ * Dark   = violet on near-black ("MainJournalApp-darkmode.png")
  */
-:root {
-  --bg: #0B1220;
-  --card: #182131;
-  --border: #2B3445;
-  --primary: #FF914D;
-  --text: #F9FAFB;
-  --secondary: #9CA3AF;
+
+:root,
+[data-theme="light"] {
+  --bg: #FAF9F5;
+  --surface-panel: #F5F3EE;   /* sidebar + insights rails */
+  --surface-card: #FFFFFF;
+  --surface-subtle: #EFEDE6;  /* AI bubbles, inset wells */
+  --border: #E3DFD5;
+  --border-strong: #D6D1C4;
+
+  --text: #1F1D1A;
+  --text-muted: #6F6A60;
+  --text-faint: #9A948A;
+
+  --accent: #C4632F;          /* terracotta */
+  --accent-hover: #AA5427;
+  --accent-fg: #FFFFFF;
+  --accent-soft: rgba(196, 99, 47, 0.12);
+
+  --bubble-user: #C4632F;
+  --bubble-user-text: #FFFFFF;
+  --bubble-ai: #EFEDE6;
+  --bubble-ai-text: #262320;
+
+  --ring-mood: #6E63C8;
+  --ring-depth: #2FB6A8;
+  --ring-streak: #E0A32E;
+  --track: #E3DFD5;
+
+  --chart-mood: #6E63C8;
+  --chart-stress: #E05A5A;
+  --chart-energy: #2FB6A8;
+
+  --success: #3F8F4F;
+  --danger: #C0453C;
+  --shadow: 0 1px 3px rgba(31, 29, 26, 0.06), 0 8px 24px rgba(31, 29, 26, 0.05);
+}
+
+[data-theme="dark"] {
+  --bg: #0B0B11;
+  --surface-panel: #101017;
+  --surface-card: #16161F;
+  --surface-subtle: #1C1C26;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --text: #F4F4F7;
+  --text-muted: #9C9CA8;
+  --text-faint: #6E6E7A;
+
+  --accent: #8B7CF6;          /* violet */
+  --accent-hover: #7A68F0;
+  --accent-fg: #FFFFFF;
+  --accent-soft: rgba(139, 124, 246, 0.16);
+
+  --bubble-user: #8B7CF6;
+  --bubble-user-text: #FFFFFF;
+  --bubble-ai: #1C1C26;
+  --bubble-ai-text: #E8E8EE;
+
+  --ring-mood: #8B7CF6;
+  --ring-depth: #34D3C0;
+  --ring-streak: #E8B54A;
+  --track: rgba(255, 255, 255, 0.10);
+
+  --chart-mood: #8B7CF6;
+  --chart-stress: #F1666B;
+  --chart-energy: #34D3C0;
+
+  --success: #4ADE80;
+  --danger: #F87171;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
 }

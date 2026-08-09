@@ -4,22 +4,13 @@ import logger from "./config/logger.js";
 import connectDB from "./config/db.js";
 import { connectRedis } from "./config/redis.js";
 
-const start = async () => {
-  // MongoDB is required — fail fast if it can't connect.
-  try {
-    await connectDB();
-  } catch (err) {
-    logger.error("Failed to connect to MongoDB. Exiting.", err.message);
-    process.exit(1);
-  }
+// Start listening IMMEDIATELY so the port is always open. If we waited for
+// MongoDB, a DB outage would leave nothing on port 5000 and the frontend proxy
+// would report a confusing "502 / ECONNREFUSED" instead of a real error.
+app.listen(env.port, () => {
+  logger.info(`Server running on http://127.0.0.1:${env.port} [${env.nodeEnv}]`);
+});
 
-  // Redis is optional — a failure here must NOT stop the server. If it's
-  // unavailable the cache helpers degrade to direct DB access.
-  connectRedis();
-
-  app.listen(env.port, () => {
-    logger.info(`Server running on port ${env.port} [${env.nodeEnv}]`);
-  });
-};
-
-start();
+// Both of these connect in the background and retry on their own.
+connectDB();
+connectRedis();

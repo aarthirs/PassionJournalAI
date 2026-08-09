@@ -1,24 +1,20 @@
 import { useEffect } from "react";
 
-const Toast = ({ message, type, onClose }) => {
-
+const Toast = ({ message, type = "success", onClose, duration = 4000 }) => {
   useEffect(() => {
     if (!message) return;
-
-    const timer = setTimeout(onClose, 3000);
-
+    const timer = setTimeout(onClose, duration);
     return () => clearTimeout(timer);
-  }, [message, onClose]);
+  }, [message, onClose, duration]);
 
   if (!message) return null;
 
   return (
     <div
-      className={`
-        fixed top-5 right-5 z-[9999]
-        rounded-lg px-5 py-3 text-white shadow-xl
-        ${type === "success" ? "bg-green-600" : "bg-red-600"}
-      `}
+      role="status"
+      className={`fixed bottom-5 right-5 z-[9999] max-w-sm rounded-xl px-4 py-3 text-sm font-medium text-white shadow-2xl ${
+        type === "success" ? "bg-[var(--success)]" : "bg-[var(--danger)]"
+      }`}
     >
       {message}
     </div>

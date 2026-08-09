@@ -1,19 +1,9 @@
 import { LoaderCircle } from "lucide-react";
 
-const Loading = () => {
-  return (
-    <div className="flex h-52 items-center justify-center">
-
-      <LoaderCircle
-
-        size={36}
-
-        className="animate-spin text-violet-600"
-
-      />
-
-    </div>
-  );
-};
+const Loading = ({ size = 32 }) => (
+  <div className="flex items-center justify-center py-10">
+    <LoaderCircle size={size} className="animate-spin text-[var(--accent)]" />
+  </div>
+);
 
 export default Loading;

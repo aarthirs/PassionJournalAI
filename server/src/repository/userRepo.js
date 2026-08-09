@@ -1,24 +1,20 @@
 import User from "../models/User.js";
 
-// Phase 3 has no auth yet (that lands in Phase 5). To keep every query
-// user-scoped from day one, we resolve a single "demo" user and cache its id.
-// In Phase 5, attachUser is replaced by real auth and this helper goes away.
-let demoUserIdCache = null;
+export const findById = (id) => User.findById(id);
 
-export const getDemoUserId = async () => {
-  if (demoUserIdCache) return demoUserIdCache;
+// Find an existing user by Google id (or email), or create one. Also links a
+// Google login to a pre-existing email account. This is the single entry point
+// for turning a Google profile into a User row.
+export const findOrCreateByGoogle = async ({ googleId, email, name, avatar }) => {
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
-  let user = await User.findOne({ email: "demo@reflect.local" });
-  if (!user) {
-    user = await User.create({
-      name: "Demo User",
-      email: "demo@reflect.local",
-      provider: "local",
-    });
+  if (user) {
+    let dirty = false;
+    if (!user.googleId) { user.googleId = googleId; user.provider = "google"; dirty = true; }
+    if (avatar && !user.avatar) { user.avatar = avatar; dirty = true; }
+    if (dirty) await user.save();
+    return user;
   }
 
-  demoUserIdCache = user._id;
-  return demoUserIdCache;
+  return User.create({ googleId, email, name, avatar, provider: "google" });
 };
-
-export const findUserById = (id) => User.findById(id);
