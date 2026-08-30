@@ -24,11 +24,12 @@ export default defineConfig({
          * far the heaviest and is only needed on two screens, so isolating it
          * matters most.
          */
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-charts": ["recharts"],
-          "vendor-query": ["@tanstack/react-query"],
-          "vendor-icons": ["lucide-react"],
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("@tanstack/react-query")) return "vendor-query";
+          if (id.includes("recharts")) return "vendor-charts";
+          if (id.includes("lucide-react")) return "vendor-icons";
+          if (id.includes("react")) return "vendor-react";
         },
       },
     },

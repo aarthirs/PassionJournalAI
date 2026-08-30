@@ -4,6 +4,59 @@ Everything needed to run this in production, plus the reasoning behind each choi
 
 ---
 
+## 0. Quickstart — get a live URL (single service on Render)
+
+The fastest route to a working public link. Express serves both the API **and** the built React app, so everything runs on one origin and the httpOnly auth cookies work without any cross-site complications.
+
+**1. Push to GitHub** (confirm `.env` is ignored — it is).
+
+**2. MongoDB Atlas** → Network Access → add `0.0.0.0/0` (Render's egress IPs aren't fixed on lower tiers).
+
+**3. Render** → New → **Web Service** → connect the repo:
+
+| Field | Value |
+|---|---|
+| Root Directory | *(leave blank — repo root)* |
+| Build Command | `npm install && npm run build` |
+| Start Command | `npm start` |
+| Health Check Path | `/api/health` |
+
+**4. Environment variables** (Render → Environment):
+```
+NODE_ENV=production
+SERVE_STATIC=true
+MONGODB_URI=<your Atlas connection string>
+JWT_SECRET=<node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
+GEMINI_API_KEY=<key>
+GOOGLE_CLIENT_ID=<id>
+GOOGLE_CLIENT_SECRET=<secret>
+CLIENT_URL=https://<your-service>.onrender.com
+GOOGLE_CALLBACK_URL=https://<your-service>.onrender.com/api/v1/auth/google/callback
+```
+Leave `REDIS_URL` unset — caching disables itself cleanly and MongoDB serves everything.
+
+> `CLIENT_URL` and `GOOGLE_CALLBACK_URL` need the real Render URL, which you only learn after the first deploy. Deploy once, copy the URL, set both, redeploy.
+
+**5. Google Cloud Console** → Credentials → your OAuth client → **Authorized redirect URIs** → add exactly:
+```
+https://<your-service>.onrender.com/api/v1/auth/google/callback
+```
+
+**6. Make login work for other people.** On an unpublished "External" OAuth app, only accounts listed under **Test users** can sign in. To let anyone in, go to OAuth consent screen → **Publish app**. This app only requests `openid`, `email` and `profile` — non-sensitive scopes — so publishing generally does not require Google's verification review. Verify this in the console before relying on it.
+
+**Live URL:** `https://<your-service>.onrender.com`
+
+### Cold starts — read this before putting the link on a resume
+
+Render's free tier **spins a service down after 15 minutes of inactivity**, and the next request takes roughly a minute while it wakes. A recruiter clicking a link that hangs for 60 seconds is worse than no link.
+
+Options, honestly ranked:
+1. **Paid instance (~$7/month)** — never sleeps. The only properly reliable fix, and cheap for the duration of a job search.
+2. **Keep-warm ping** — a free uptime monitor hitting `/api/health` every 10 minutes. Render's free tier grants **750 instance hours/month** and a month is ~730 hours, so one continuously-running service does fit. Render does not officially support this, so treat it as a workaround, and note it only works if this is your *only* free service.
+3. **Accept it** and add "first load may take ~60s (free hosting cold start)" next to the link. Sets expectations and is more professional than a link that appears broken.
+
+---
+
 ## 1. Architecture
 
 ```

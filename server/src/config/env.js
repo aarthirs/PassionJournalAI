@@ -6,6 +6,7 @@ const env = {
   port: process.env.PORT || 5000,
   nodeEnv: process.env.NODE_ENV || "development",
   isProd: process.env.NODE_ENV === "production",
+  serveStatic: process.env.SERVE_STATIC === "true",
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
 
   geminiApiKey: process.env.GEMINI_API_KEY,

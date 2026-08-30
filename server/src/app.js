@@ -1,3 +1,6 @@
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -19,6 +22,7 @@ import { dbGuard } from "./middleware/dbGuard.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authLimiter, aiLimiter, heavyLimiter, generalLimiter } from "./middleware/rateLimit.js";
+import logger from "./config/logger.js";
 
 const app = express();
 
@@ -67,6 +71,55 @@ app.use("/api/v1/insights", heavyLimiter, dbGuard, insightsRoutes);
 app.use("/api/v1/analytics", heavyLimiter, dbGuard, analyticsRoutes);
 app.use("/api/v1/settings", dbGuard, settingsRoutes);
 app.use("/api/v1/ai", aiLimiter, aiRoutes);
+
+/*
+ * SINGLE-ORIGIN MODE (production).
+ *
+ * Serving the built React app from the same Express process means the browser
+ * only ever talks to one origin. That matters here because auth uses httpOnly
+ * cookies: on one origin they are first-party and simply work, whereas a split
+ * frontend/backend makes them cross-site, requiring SameSite=None and running
+ * into browser third-party-cookie restrictions.
+ *
+ * Also removes CORS preflights entirely.
+ */
+if (env.serveStatic) {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const dist = path.resolve(here, "../../client/dist");
+
+  if (fs.existsSync(dist)) {
+    // Hashed asset filenames are immutable -> cache hard.
+    app.use(
+      express.static(dist, {
+        setHeaders: (res, filePath) => {
+          if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          } else {
+            // index.html must never be cached, or users get a stale shell
+            // pointing at asset hashes that no longer exist after a deploy.
+            res.setHeader("Cache-Control", "no-cache, must-revalidate");
+          }
+        },
+      })
+    );
+
+    /*
+     * SPA fallback. Client routes like /analytics are not files on disk, so a
+     * refresh must return index.html. The negative lookahead keeps /api out of
+     * the fallback, so unknown API paths still get a JSON 404 rather than HTML.
+     * A RegExp is used because Express 5 no longer accepts a bare "*" route.
+     */
+    app.get(/^\/(?!api\/).*/, (req, res) => {
+      res.sendFile(path.join(dist, "index.html"));
+    });
+
+    logger.info("Serving built client from /client/dist (single-origin mode)");
+  } else {
+    logger.warn(
+      "SERVE_STATIC is on but client/dist was not found — run `npm run build` first."
+    );
+  }
+}
 
 app.use(notFound);
 app.use(errorHandler);
