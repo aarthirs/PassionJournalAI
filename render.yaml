@@ -1,9 +1,9 @@
 services:
   - type: web
     runtime: node
-    name: passion-journal-ai
+    name: passionjournalai
     plan: free
-    buildCommand: npm ci --include=dev && npm run build
+    buildCommand: "npm ci --include=dev && npm run build"
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -22,6 +22,6 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: CLIENT_URL
-        value: https://passion-journal-ai.onrender.com
+        value: https://passionjournalai.onrender.com
       - key: GOOGLE_CALLBACK_URL
-        value: https://passion-journal-ai.onrender.com/api/v1/auth/google/callback
+        value: https://passionjournalai.onrender.com/api/v1/auth/google/callback
